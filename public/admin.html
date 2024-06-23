@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div id="admin-panel" style="display: none;">
+        <h1>Admin Panel</h1>
+        <button onclick="logout()">Logout</button>
+        <div id="add-person">
+            <input type="text" id="person-name" placeholder="Name"  maxlength="50">
+            <button onclick="addPerson()">Person hinzufügen</button>
+        </div>
+        <div id="death-counters"></div>
+
+        <!-- Bereich für Nachrichten -->
+        <div id="messages"></div>
+    </div>
+
+    <script src="admin-script.js"></script>
+    <script>
+        let isAdmin = false;
+
+        // Funktion zum Überprüfen des Login-Status und Anpassen der Anzeige
+        function checkLoginStatus() {
+            fetch('/isAdmin')
+                .then(response => response.json())
+                .then(data => {
+                    isAdmin = data.isAdmin;
+                    if (isAdmin) {
+                        document.getElementById('admin-panel').style.display = 'block';
+                        initAdminPanel(); // Initialisierung des Admin Panels
+                    } else {
+                        // Zeige eine Fehlermeldung oder leite den Benutzer zum Login weiter
+                        window.location.href = '/login.html';
+                    }
+                });
+        }
+
+        function initAdminPanel() {
+            let deathCountersDiv = document.getElementById('death-counters');
+            let socket = new WebSocket('ws://NODE-1.hostingnest.de:25597/');
+
+            socket.onmessage = function(event) {
+                let data = JSON.parse(event.data);
+                updateDeathCounters(data);
+            };
+
+            function updateDeathCounters(data) {
+                deathCountersDiv.innerHTML = '';
+                data.forEach(person => {
+                    let div = document.createElement('div');
+                    div.className = 'death-counter';
+                    div.innerHTML = `
+                        <h2>${person.name}</h2>
+                        <div class="count">${person.deaths}</div>
+                        <button onclick="updateDeaths('${person.name}', 1)">+</button>
+                        <button onclick="updateDeaths('${person.name}', -1)">-</button>
+                        <button onclick="removePerson('${person.name}')">Entfernen</button>
+                    `;
+                    deathCountersDiv.appendChild(div);
+                });
+            }
+
+            function updateDeaths(name, increment) {
+                fetch('/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, increment })
+                });
+            }
+
+            function removePerson(name) {
+                fetch('/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+            }
+
+            function addPerson() {
+                const name = document.getElementById('person-name').value;
+                fetch('/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+            }
+
+            function logout() {
+                fetch('/logout', { method: 'POST' })
+                    .then(() => {
+                        isAdmin = false;
+                        window.location.href = '/login.html'; // Nach dem Logout zum Login weiterleiten
+                    });
+            }
+
+            // Funktion zum Anzeigen einer Nachricht für eine bestimmte Zeit
+            function showMessage(message) {
+                const messagesDiv = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = 'message';
+                div.textContent = message;
+                messagesDiv.appendChild(div);
+                setTimeout(() => {
+                    div.remove(); // Nachricht nach 5 Sekunden entfernen
+                }, 5000);
+            }
+
+            // Beispiel: Zeige eine Testnachricht an
+            showMessage('Willkommen im Admin Panel!');
+        }
+
+        // Beim Laden der Seite überprüfen wir den Login-Status
+        window.onload = checkLoginStatus();
+    </script>
+</body>
+</html>
