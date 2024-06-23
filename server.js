@@ -100,5 +100,5 @@ function broadcast() {
 
 const PORT = process.env.PORT || 25597;
 server.listen(PORT, () => {
-    console.log(`Server läuft auf NODE-1.hostingnest.de:${PORT}`);
+    console.log(`Server läuft auf localhost:${PORT}`);
 });
