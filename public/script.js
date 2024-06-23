@@ -1,5 +1,5 @@
 let deathCountersDiv = document.getElementById('death-counters');
-let socket = new WebSocket('ws://NODE-1.hostingnest.de:25597/');
+let socket = new WebSocket('ws://localhost:25597/');
 
 socket.onmessage = function(event) {
     let data = JSON.parse(event.data);
