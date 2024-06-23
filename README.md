@@ -16,4 +16,4 @@ An open-source Project for a the Streamer LuisNLC for his Elden Ring Streams!
 4. open ``http://localhost:25597`` in your Browser
 5. ``http://localhost:25597/login.html`` is the admin panel your login data can you find in ``users.json``
 
-# Please dont give it ours as yours Thanks :)
+# Please dont give it out as yours Thanks :)
